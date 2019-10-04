@@ -5,6 +5,7 @@ namespace App\Entity;
 use ApiPlatform\Core\Annotation\ApiResource;
 use Carbon\Carbon;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ApiResource(
@@ -13,7 +14,9 @@ use Doctrine\ORM\Mapping as ORM;
  *          "get"={},
  *          "put"
  *     },
- *     shortName="cheeses"
+ *     shortName="cheeses",
+ *     normalizationContext={"groups"={"cheese_listing:read"}, "swagger_definition_name"="Read"},
+ *     denormalizationContext={"groups"={"cheese_listing:write"}, "swagger_definition_name"="Write"}
  * )
  * @ORM\Entity(repositoryClass="App\Repository\CheeseListingRepository")
  */
@@ -28,6 +31,7 @@ class CheeseListing
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"cheese_listing:read", "cheese_listing:write"})
      */
     private $title;
 
@@ -35,11 +39,13 @@ class CheeseListing
      * The price of this delicious cheese, in cents
      *
      * @ORM\Column(type="text")
+     * @Groups({"cheese_listing:read"})
      */
     private $description;
 
     /**
      * @ORM\Column(type="integer")
+     * @Groups({"cheese_listing:read", "cheese_listing:write"})
      */
     private $price;
 
@@ -51,7 +57,7 @@ class CheeseListing
     /**
      * @ORM\Column(type="boolean")
      */
-    private $isPublished;
+    private $isPublished = false;
 
     public function __construct()
     {
@@ -97,6 +103,11 @@ class CheeseListing
         return $this->createdAt;
     }
 
+    /**
+     * How long ago in text that this cheese listing was added.
+     *
+     * @Groups("cheese_listing:read")
+     */
     public function getCreatedAtAgo(): string
     {
         return Carbon::instance($this->getCreatedAt())->diffForHumans();
@@ -114,6 +125,11 @@ class CheeseListing
         return $this;
     }
 
+    /**
+     * The description of the cheese as raw text.
+     *
+     * @Groups("cheese_listing:write")
+     */
     public function setTextDescription(string $description): self
     {
         $this->description = nl2br($description);
